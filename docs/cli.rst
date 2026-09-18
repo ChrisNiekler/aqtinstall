@@ -619,6 +619,12 @@ for ``doc``/``example``, ``modules``.
     no other CMake files required, setting ``CMAKE_PREFIX_PATH`` (and ``CMAKE_TOOLCHAIN_FILE``
     when Qt ships one, e.g. for Android).
 
+``install`` accepts the same ``--outputdir``/``-O`` option as every other ``install-*``
+command, to choose where the manifest's packages are installed -- there is no separate
+``--install-dir`` flag. When ``--generate-cmake-presets`` is also given, it scans this same
+directory. See `common options`_ for this and the rest of the shared options (``--base``,
+``--timeout``, ``--keep``, ``--dry-run``, etc.).
+
 .. _qt installation command:
 
 install-qt command
