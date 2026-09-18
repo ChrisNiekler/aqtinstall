@@ -92,6 +92,52 @@ def test_install_explicit_path_dispatches_qt_tool_and_sde_entries(monkeypatch, t
     assert sde_calls[0][1].qt_version_spec == "6.5.3"
 
 
+def test_install_dispatches_src_and_example_entries(monkeypatch, tmp_path):
+    manifest_path = write_manifest(
+        tmp_path,
+        """
+        src:
+          - version: "6.5.3"
+        example:
+          - version: "6.5.3"
+            modules: [qtcharts]
+        """,
+    )
+    monkeypatch.setattr("aqt.requirements.detect_host", lambda: "linux")
+    sde_calls = []
+    monkeypatch.setattr(Cli, "_run_src_doc_examples", lambda self, kind, ns: sde_calls.append((kind, ns)))
+
+    cli = make_cli()
+    assert 0 == cli.run(["install", "--requirements", str(manifest_path)])
+
+    kinds = {kind for kind, _ in sde_calls}
+    assert kinds == {"src", "examples"}  # "examples" (plural) matches _run_src_doc_examples' own flavor convention
+    example_ns = next(ns for kind, ns in sde_calls if kind == "examples")
+    assert example_ns.modules == ["qtcharts"]
+
+
+def test_install_tool_variant_missing_for_detected_host_fails_cleanly(monkeypatch, tmp_path, capsys):
+    manifest_path = write_manifest(
+        tmp_path,
+        """
+        tool:
+          - name: ninja
+            variant:
+              windows: qt.tools.ninja
+        """,
+    )
+    monkeypatch.setattr("aqt.requirements.detect_host", lambda: "linux")
+    tool_calls = []
+    monkeypatch.setattr(Cli, "run_install_tool", lambda self, ns: tool_calls.append(ns))
+
+    cli = make_cli()
+    assert 1 == cli.run(["install", "--requirements", str(manifest_path)])
+
+    out, err = capsys.readouterr()
+    assert "does not define a value for host 'linux'" in err
+    assert tool_calls == []
+
+
 def test_install_host_override_resolves_arch_for_a_different_host(monkeypatch, tmp_path):
     manifest_path = write_manifest(
         tmp_path,

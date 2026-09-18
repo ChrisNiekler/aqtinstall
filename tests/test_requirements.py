@@ -123,6 +123,21 @@ def test_qt_requirement_arch_missing_host_raises(tmp_path):
         manifest.qt[0].resolved_arch("windows")
 
 
+def test_tool_requirement_variant_missing_host_raises(tmp_path):
+    path = write_manifest(
+        tmp_path,
+        """
+        tool:
+          - name: ninja
+            variant:
+              linux: qt.tools.ninja
+        """,
+    )
+    manifest = load_requirements(path)
+    with pytest.raises(CliInputError, match="does not define a value for host 'windows'"):
+        manifest.tool[0].resolved_variant("windows")
+
+
 def test_detect_host_matches_known_choices():
     from aqt.requirements import HOST_CHOICES
 
